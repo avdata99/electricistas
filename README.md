@@ -15,4 +15,10 @@ source .python/bin/activate
 ```
 ### Windows
 
-completar ...
+Instalar y activar el entorno local
+Python >= 3.8 requirido
+
+```PowerShell
+python -m venv .python
+.python\Scripts\activate
+```
