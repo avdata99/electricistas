@@ -8,10 +8,29 @@ import requests
 # URL con la pagina pendiente de carga para paginar
 url = 'http://volta.net.ar/registro?gd=&categoria=&nombre=&cuil=&registro=&localidad=CORDOBA&page={npage}'
 
-# Agregar headers al request para que parezca hecho por un humano
-headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
-}
+def gen_html(URL, n_page):
+    # Agregar headers al request para que parezca hecho por un humano
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',}
+    print(f'Revisando {URL}')
+
+    # para evitar que cada ejecucion haga 200 request a la página,
+    # grabamos los HTMLs localmente y los usamos cuando sea necesario
+    # solo hacemos el request si no está descargado el HTML
+    html_file = f'pagina-{n_page}.html'
+    if not os.path.exists(html_file):
+        print(f' - Descargando {URL}')
+        response = requests.get(URL, headers=headers)
+        f = open(html_file, 'w', encoding='utf-8')
+        f.write(response.text)
+        f.close()
+
+    # abrimos el archivo local que ya está descargado
+    f = open(html_file, 'r', encoding='utf-8')
+    texto_pagina = f.read()
+    f.close()
+
+    return texto_pagina
+
 
 # preparar un archivo CSV para guardar los datos
 final_csv_file = open('final.csv', 'w', encoding='utf-8')
@@ -23,25 +42,8 @@ writer.writeheader()
 # son 201 páginas
 for page in range(1, 202):
     paginated_url = url.format(npage=page)
-    print(f'Revisando {paginated_url}')
-
-    # para evitar que cada ejecucion haga 200 request a la página,
-    # grabamos los HTMLs localmente y los usamos cuando sea necesario
-    # solo hacemos el request si no está descargado el HTML
-    html_file = f'pagina-{page}.html'
-    if not os.path.exists(html_file):
-        print(f' - Descargando {paginated_url}')
-        response = requests.get(paginated_url, headers=headers)
-        f = open(html_file, 'w', encoding='utf-8')
-        f.write(response.text)
-        f.close()
-
-    # abrimos el archivo local que ya está descargado
-    f = open(html_file, 'r', encoding='utf-8')
-    texto_pagina = f.read()
-    f.close()
-
-    soup = BeautifulSoup(texto_pagina, 'html.parser')
+    text = gen_html(paginated_url, page)
+    soup = BeautifulSoup(text, 'html.parser')
 
     # ejemplo de como ver las clases de todas las tablas del HTML
     # Sirve para ver que elementos están en el HTML y BS4 ve
@@ -49,7 +51,7 @@ for page in range(1, 202):
     #     print(table.get('class'))
 
     # la pagina tiene una tabla con ID
-    # eso simplifica ubiucarla
+    # eso simplifica ubicarla
     tabla_id = 'tblResultados'
     table = soup.find('table', id=tabla_id)
     for row in table.tbody.find_all('tr'):
@@ -74,3 +76,4 @@ for page in range(1, 202):
         }
         writer.writerow(matriculado)
     sleep(1)
+
