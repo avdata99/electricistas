@@ -1,4 +1,5 @@
 .python
+.vscode
 
 __pycache__
 
