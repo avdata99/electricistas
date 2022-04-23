@@ -3,6 +3,7 @@ from time import sleep
 import csv
 import os
 import requests
+from pathlib import Path
 
 
 # URL con la pagina pendiente de carga para paginar
@@ -11,6 +12,8 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
 }
 
+#Creo la carpeta donde guardare los archivos .html creados
+Path('paginas').mkdir(exist_ok=True)
 
 def gen_html(URL, n_page):
     # Agregar headers al request para que parezca hecho por un humano
@@ -20,15 +23,15 @@ def gen_html(URL, n_page):
     # grabamos los HTMLs localmente y los usamos cuando sea necesario
     # solo hacemos el request si no está descargado el HTML
     html_file = f'pagina-{n_page}.html'
-    if not os.path.exists(html_file):
+    if not os.path.exists(f'paginas/{html_file}'):#pregunto primero si existe la pagina dentro de la carpeta, si no existe la descargo
         print(f' - Descargando {URL}')
         response = requests.get(URL, headers=headers)
-        f = open(html_file, 'w', encoding='utf-8')
+        f = open(f'paginas/{html_file}', 'w', encoding='utf-8')
         f.write(response.text)
         f.close()
-
+        
     # abrimos el archivo local que ya está descargado
-    f = open(html_file, 'r', encoding='utf-8')
+    f = open(f'paginas/{html_file}', 'r', encoding='utf-8')
     texto_pagina = f.read()
     f.close()
 
