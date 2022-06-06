@@ -3,17 +3,7 @@ from time import sleep
 import csv
 import os
 import requests
-from pathlib import Path
 
-
-# URL con la pagina pendiente de carga para paginar
-url = 'http://volta.net.ar/registro?gd=&categoria=&nombre=&cuil=&registro=&localidad=CORDOBA&page={npage}'
-headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
-}
-
-#Creo la carpeta donde guardare los archivos .html creados
-Path('paginas').mkdir(exist_ok=True)
 
 def gen_html(URL, n_page):
     # Agregar headers al request para que parezca hecho por un humano
@@ -22,16 +12,21 @@ def gen_html(URL, n_page):
     # para evitar que cada ejecucion haga 200 request a la página,
     # grabamos los HTMLs localmente y los usamos cuando sea necesario
     # solo hacemos el request si no está descargado el HTML
-    html_file = f'pagina-{n_page}.html'
-    if not os.path.exists(f'paginas/{html_file}'):#pregunto primero si existe la pagina dentro de la carpeta, si no existe la descargo
+    html_file = f'paginas/pagina-{n_page}.html'
+    headers_val = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
+    }
+    # pregunto primero si existe la pagina dentro de la carpeta,
+    # si no existe la descargo
+    if not os.path.exists(html_file):
         print(f' - Descargando {URL}')
-        response = requests.get(URL, headers=headers)
-        f = open(f'paginas/{html_file}', 'w', encoding='utf-8')
+        response = requests.get(URL, headers=headers_val)
+        f = open(html_file, 'w', encoding='utf-8')
         f.write(response.text)
         f.close()
-        
+
     # abrimos el archivo local que ya está descargado
-    f = open(f'paginas/{html_file}', 'r', encoding='utf-8')
+    f = open(html_file, 'r', encoding='utf-8')
     texto_pagina = f.read()
     f.close()
 
@@ -46,6 +41,13 @@ def scrape_volta():
     writer = csv.DictWriter(final_csv_file, fieldnames=fieldnames)
     writer.writeheader()
 
+    # Creo la carpeta donde guardare los archivos .html creados
+    path = 'paginas'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # URL con la pagina pendiente de carga para paginar
+    url = 'http://volta.net.ar/registro?gd=&categoria=&nombre=&cuil=&registro=&localidad=CORDOBA&page={npage}'
     # son 201 páginas
     for page in range(1, 202):
         paginated_url = url.format(npage=page)
