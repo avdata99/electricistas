@@ -4,6 +4,10 @@ import csv
 import os
 import requests
 
+def otrafuncion():
+    casa = 4
+
+otrafuncion()
 
 def gen_html(URL, n_page):
     # Agregar headers al request para que parezca hecho por un humano
