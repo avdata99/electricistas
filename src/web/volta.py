@@ -20,7 +20,11 @@ def gen_html(URL, n_page):
     # si no existe la descargo
     if not os.path.exists(html_file):
         print(f' - Descargando {URL}')
-        response = requests.get(URL, headers=headers_val)
+        response = requests.get(
+            URL,
+            headers=headers_val,
+            timeout=10,
+        )
         f = open(html_file, 'w', encoding='utf-8')
         f.write(response.text)
         f.close()
