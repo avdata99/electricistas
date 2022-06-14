@@ -1,8 +1,11 @@
-from bs4 import BeautifulSoup  # pip install bs4
-from time import sleep
 import csv
 import os
 import requests
+
+from bs4 import BeautifulSoup  # pip install bs4
+from time import sleep
+
+from matriculados import Matriculado
 
 
 def gen_html(URL, n_page):
@@ -40,7 +43,7 @@ def gen_html(URL, n_page):
 def scrape_volta():
     # preparar un archivo CSV para guardar los datos
     final_csv_file = open('final.csv', 'w', encoding='utf-8')
-    fieldnames = ['nro', 'cuil', 'nombre', 'categoria', 'registro',
+    fieldnames = ['numero', 'cuil', 'nombre', 'categoria', 'registro',
                   'localidad', 'barrio', 'contacto']
     writer = csv.DictWriter(final_csv_file, fieldnames=fieldnames)
     writer.writeheader()
@@ -77,15 +80,24 @@ def scrape_volta():
                 157-913035
                 agus_dlc5@hotmail.com
                 """
-            matriculado = {
-                'nro': tds[0].text,
-                'cuil': tds[1].text,
-                'nombre': tds[2].text,
-                'categoria': tds[3].text,
-                'registro': tds[4].text,
-                'localidad': tds[5].text,
-                'barrio': tds[6].text,
-                'contacto': tds[7].text,
-            }
-            writer.writerow(matriculado)
+            matriculado = Matriculado(
+                nro=tds[0].text,
+                cuil=tds[1].text,
+                nombre=tds[2].text,
+                categoria=tds[3].text,
+                registro=tds[4].text,
+                localidad=tds[5].text,
+                barrio=tds[6].text,
+                contacto=tds[7].text
+            )
+
+            # tomar solo las propiedades del matriculado que
+            # se usaron como fieldnames al inicio
+            row = {}
+            m_dict = matriculado.__dict__
+            for key, value in m_dict.items():
+                if key in fieldnames:
+                    row[key] = value
+
+            writer.writerow(row)
         sleep(1)
